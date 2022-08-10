@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:salesforce-composite="http://www.mulesoft.org/schema/mule/salesforce-composite"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/salesforce-composite http://www.mulesoft.org/schema/mule/salesforce-composite/current/mule-salesforce-composite.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+	<http:listener-config name="HTTP_Listener_config"
+		doc:name="HTTP Listener config"
+		doc:id="5459824a-90d4-48b1-b829-dc49d959e071">
+		<http:listener-connection host="0.0.0.0"
+			port="8081" />
+	</http:listener-config>
+	<salesforce-composite:composite-config
+		name="Salesforce_Composite_Config"
+		doc:name="Salesforce Composite Config"
+		doc:id="28f937d6-0fc6-4e23-aa5b-58b0e0287694">
+		<salesforce-composite:oauth-user-pass-connection
+			consumerKey="3MVG9pRzvMkjMb6luRt05LE9rrJERZTGhETdVU_e6C0sUnmbsQc0VpWRLS6HZKUMHkaDxyqRW8xDBSxidkA_m"
+			consumerSecret="D725F02D5BC4B3FA16DB31972B2BBAED1A306107F8E67766AD668A2DFD57EEBA"
+			username="maheshgowd56@gmail.com" password="Mahesh2k22"
+			securityToken="BTIXpEbBNVmCF0GTBNUCZCXkn" />
+	</salesforce-composite:composite-config>
+	<salesforce:sfdc-config name="Salesforce_Config"
+		doc:name="Salesforce Config"
+		doc:id="f4e51064-4d58-404e-8d15-1405799e62af">
+		<salesforce:oauth-user-pass-connection
+			consumerKey="3MVG9pRzvMkjMb6luRt05LE9rrJERZTGhETdVU_e6C0sUnmbsQc0VpWRLS6HZKUMHkaDxyqRW8xDBSxidkA_m"
+			consumerSecret="D725F02D5BC4B3FA16DB31972B2BBAED1A306107F8E67766AD668A2DFD57EEBA"
+			username="maheshgowd56@gmail.com" password="Mahesh2k22"
+			securityToken="BTIXpEbBNVmCF0GTBNUCZCXkn" />
+	</salesforce:sfdc-config>
+	<flow name="salesforce-composite-demoFlow"
+		doc:id="1a3998fa-bf06-4341-a898-179770793be6">
+		<http:listener doc:name="Listener"
+			doc:id="7555edc7-b076-4d47-a6a5-435b2b5f7ded"
+			config-ref="HTTP_Listener_config" path="/composite" />
+		<logger level="INFO" doc:name="Flow Start Logger"
+			doc:id="3d868e6f-1521-4628-b474-41f5b9072041"
+			message=":::::::::::::::Flow Start Logger ::::::::::::::::#[payload]" />
+		<salesforce-composite:execute-composite-request
+			doc:name="Execute composite request"
+			doc:id="57018050-739d-4c47-9ce8-8f89f8cd0364"
+			config-ref="Salesforce_Composite_Config" />
+		<ee:transform doc:name="Transform Message"
+			doc:id="ec33adaf-b262-4be8-9a4b-1422032a71f1">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO"
+			doc:name="Response After Composite Request"
+			doc:id="fb26e526-af05-45e5-97fd-8a855bfda739"
+			message="::::::::::::Response After Composite Request::::::::::::::#[payload]" />
+	</flow>
+	<flow name="salesforce-compositeTree-connectorFlow"
+		doc:id="a5e823b7-656d-4f00-8b7b-9d0da6736d94">
+		<http:listener doc:name="Listener"
+			doc:id="ecf25fe0-5a4a-4e1a-bc7b-7fd569413506"
+			config-ref="HTTP_Listener_config" path="/compositeTree" />
+		<logger level="INFO" doc:name="StartLogger"
+			doc:id="d2a16895-4c5c-47d2-b78d-26ef2aa7cf63"
+			message=":::::::::Flow Start::::::;" />
+		<salesforce-composite:create-sobject-tree
+			doc:name="Create sobject tree"
+			doc:id="5bca4c8a-fbd2-46c9-aa66-ecedfaee1889"
+			config-ref="Salesforce_Composite_Config" type="Account">
+			<salesforce-composite:s-objects><![CDATA[#[payload.records]]]></salesforce-composite:s-objects>
+		</salesforce-composite:create-sobject-tree>
+		<ee:transform doc:name="Transform Message"
+			doc:id="8ddd8cb7-0aa2-4a32-a8fa-d450dc21003d">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="EndLogger"
+			doc:id="2393b422-4318-4494-9a6c-1baa16a3a520"
+			message=":::::::Flow end::::::::#[payload]" />
+	
+</flow>
+	<flow name="salesforce-composite-demoFlow1"
+		doc:id="9306646f-52ce-4d5e-b8b4-5c73055102bd">
+		<http:listener doc:name="Listener"
+			doc:id="731a011a-cf5a-4021-ab24-f0f6eb6c3a68"
+			config-ref="HTTP_Listener_config" path="/sobjectcollections" />
+		<logger level="INFO" doc:name="StartLogger"
+			doc:id="ce968665-fd7e-42e0-81d5-b2e65470adeb"
+			message=":::::::::Flow Start::::::" />
+		<salesforce-composite:create-sobject-collections
+			doc:name="Create sobject collections"
+			doc:id="89cb0f8d-7a58-4c29-95cb-dc79f80f6042"
+			config-ref="Salesforce_Composite_Config" />
+		<ee:transform doc:name="Transform Message"
+			doc:id="1b67d9cb-84e8-400a-b1f7-32cf73904f9e">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="EndLogger"
+			doc:id="93c8cac5-29fe-4f9d-aa2d-61399b152197"
+			message=":::::::Flow end::::::::#[payload]" />
+	</flow>
+	<flow name="composite-prequery-exampleFlow" >
+      <http:listener doc:name="Listener" config-ref="HTTP_Listener_config" path="/executeFlow"/>
+      <ee:transform doc:name="Transform Message" >
+         <ee:message >
+            <ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+   Name: "MyNewAccount"
+}]]></ee:set-payload>
+         </ee:message>
+      </ee:transform>
+      <salesforce-composite:pre-create type="Account" doc:name="Pre create" config-ref="Salesforce_Composite_Config">
+      </salesforce-composite:pre-create>
+      <salesforce:create doc:name="Create" doc:id="ae4789ec-4484-4fa4-b31c-69510006c91a" config-ref="Salesforce_Config" type="Account"/>
+		<logger level="INFO" doc:name="Logger" doc:id="e01f6161-16a0-4745-8cce-36bc0b29b898" message="Create Response :::::::#[payload]"/>
+		<ee:transform doc:name="Transform Message" >
+         <ee:message >
+            <ee:set-payload ><![CDATA[output application/java
+---
+{
+   "Id": payload.Id,
+   "Fields" : ["Id", "Name"],
+   "Type": "Account"
+}]]></ee:set-payload>
+         </ee:message>
+      </ee:transform>
+      <salesforce-composite:pre-query doc:name="Pre query" config-ref="Salesforce_Composite_Config">
+         <salesforce-composite:query >Select Name from Account WHERE Name LIKE '%:name %'
+                    </salesforce-composite:query>
+         <salesforce-composite:parameters ><![CDATA[#[output application/java
+---
+{
+   "name" : "MyNewAccount"
+}]]]></salesforce-composite:parameters>
+      </salesforce-composite:pre-query>
+      <ee:transform doc:name="Transform Message" >
+         <ee:message >
+            <ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+[
+   payload
+]]]></ee:set-payload>
+         </ee:message>
+      </ee:transform>
+      <salesforce-composite:execute-composite-batch doc:name="Execute composite batch" config-ref="Salesforce_Composite_Config"/>
+      <ee:transform doc:name="Transform Message" >
+         <ee:message >
+            <ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+         </ee:message>
+      </ee:transform>
+   </flow>
+	<flow name="salesforce-composite-demoFlow3" doc:id="ce7f784d-2cbe-4901-8a6f-04dd344e0568" >
+		<http:listener doc:name="Listener" doc:id="29b3e746-49bb-4831-b1a3-0818e7b95f79" config-ref="HTTP_Listener_config" path="/getsobjectCollections"/>
+		<logger level="INFO" doc:name="Flow Start Logger" doc:id="6dd40da1-d9aa-4cc2-9d57-a337a14a009d" message="::::::::::::Flow Start Logger:::::::::::"/>
+		<salesforce-composite:get-sobject-collections type="Account" doc:name="Get sobject collections" doc:id="5e9c7e68-9d58-44fd-b2e8-bed9bf31c083" config-ref="Salesforce_Composite_Config">
+			<salesforce-composite:ids >
+				<salesforce-composite:id value="0015j00000kI0jLAAS" />
+			</salesforce-composite:ids>
+			<salesforce-composite:fields >
+				<salesforce-composite:field value="Name,BillingCity" />
+			</salesforce-composite:fields>
+		</salesforce-composite:get-sobject-collections>
+		<ee:transform doc:name="Transform Message" doc:id="bb09b4d1-57f8-4016-9549-d2f605acad70" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End Logger" doc:id="bda451d2-7716-446a-871c-449f382e6723" message="Get sobject collections Payload ::::::::::::::#[payload]"/>
+	</flow>
+	<flow name="salesforce-composite-Create-sobject-collections-flow" doc:id="36d348ec-a001-488c-8fa3-33a4eca76e36" >
+		<http:listener doc:name="Listener" doc:id="99ceab3a-95cd-4221-b048-8b9e06466c7c" config-ref="HTTP_Listener_config" path="/sobjectCollections"/>
+		<logger level="INFO" doc:name="Flow Start Logger" doc:id="66973f52-96fa-4496-a884-db2c004dc204" message=":::::::::::::Flow Start Logger:::::::::::::::::"/>
+		<ee:transform doc:name="Transform Message" doc:id="3653829c-b5e2-4fcd-beaf-3e92c7c5ccf1" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<salesforce-composite:create-sobject-collections doc:name="Create sobject collections" doc:id="518cc992-4186-4ea1-a454-6cf259a3ae7b" config-ref="Salesforce_Composite_Config"/>
+		<ee:transform doc:name="Transform Message" doc:id="799c4651-824a-4dad-ad1c-40e7489cde4b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End logger" doc:id="84307b9c-e115-4154-971d-c2bf9a448167" message="End logger :::::::::::::::::#[payload]"/>
+	</flow>
+	<flow name="salesforce-composite-updateSobjectCollections-Flow" doc:id="a6b09f35-981e-454c-ad54-005bdc881eb1" >
+		<http:listener doc:name="Listener" doc:id="10360858-553f-4800-aebf-def848a7893e" config-ref="HTTP_Listener_config" path="/updatecollections"/>
+		<logger level="INFO" doc:name="StartLogger" doc:id="3c985cd0-8d5f-418c-a868-444dcc728977" message=":::::::::::Flow Start::::::::::::"/>
+		<salesforce-composite:update-sobject-collections doc:name="Update sobject collections" doc:id="2b80e687-5274-477b-ae7f-de7dca07874e" config-ref="Salesforce_Composite_Config"/>
+		<ee:transform doc:name="Transform Message" doc:id="fccd5855-2fd9-419d-a00b-456463cc3e35" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="EndLogger" doc:id="c22c1dd2-ff71-4c4b-8bad-623cf1c18ed3" message="::::::::::::Flow End:::::#[payload]"/>
+	</flow>
+	<flow name="salesforce-deletecomposite-connector-Flow" doc:id="3683e65b-0df5-4c20-ab59-a8fb7dfad831" >
+		<http:listener doc:name="Listener" doc:id="ba4d9206-91ab-427c-a27a-c8f02a29f646" config-ref="HTTP_Listener_config" path="/deletecollections"/>
+		<logger level="INFO" doc:name="StartLogger" doc:id="caa06f52-57d5-4631-9d39-aa3b434403cd" message=":::::::::Flow Start::::::::::"/>
+		<salesforce-composite:delete-sobject-collections doc:name="Delete sobject collections" doc:id="67c3f67f-06fe-425b-a3bf-74af87aa2d4c" config-ref="Salesforce_Composite_Config">
+			<salesforce-composite:ids >
+				<salesforce-composite:id value="0015j000008IuE1AAK" />
+			</salesforce-composite:ids>
+		</salesforce-composite:delete-sobject-collections>
+		<ee:transform doc:name="Transform Message" doc:id="abbd5858-4ffd-42dc-a5cb-58826df37fd7" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="EndLogger" doc:id="2aac7cce-ed19-4cf6-b050-e17783b95dc4" message=":::::::::::Flow End:::::::::::::#[payload]"/>
+	</flow>
+</mule>
+
